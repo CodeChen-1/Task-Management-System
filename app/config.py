@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:///./tasks.db"
 
     DEBUG: bool = True
-
+    ENVIRONMENT: str = "development"
     class Config:
         env_file = ".env"
 
