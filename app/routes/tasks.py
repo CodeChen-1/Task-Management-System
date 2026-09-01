@@ -39,7 +39,7 @@ def get_task(
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
-@router.get("/tasks/{task_id}", response_model=TaskResponse)
+@router.put("/tasks/{task_id}", response_model=TaskResponse)
 def update_task(
     task_id: int,
     task_update: TaskUpdate,
