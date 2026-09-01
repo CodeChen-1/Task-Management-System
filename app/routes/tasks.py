@@ -55,7 +55,7 @@ def update_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    task = db.query(task).filter(Task.id == task_id, Task.user_id == current_user.id).first()
+    task = db.query(Task).filter(Task.id == task_id, Task.user_id == current_user.id).first()
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     update_data = task_update.dict(exclude_unset=True)
