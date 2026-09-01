@@ -29,6 +29,14 @@ def create_task(
     db.refresh(new_task)
     return new_task
 
+@router.get("/tasks", response_model=TaskResponse)
+def get_tasks(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    tasks = db.query(Task).filter(Task.user_id == current_user.id).all()
+    return tasks
+
 @router.get("/tasks/{task_id}", response_model=TaskResponse)
 def get_task(
     db: Session = Depends(get_db), 
