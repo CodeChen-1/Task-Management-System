@@ -1,6 +1,6 @@
 import requests
 
-BASE_URL = "https://127.0.0.1:8000"
+BASE_URL = "http://127.0.0.1:8000"
 
 def handle_register():
     print("\n--- Register ---")
@@ -8,7 +8,7 @@ def handle_register():
     email = input("Email: ").strip()
     password = input("Password: ").strip()
 
-    response = requests.post(f"{BASE_URL}/resister", json={
+    response = requests.post(f"{BASE_URL}/register", json={
         "username": username,
         "email": email,
         "password": password
@@ -129,7 +129,6 @@ def handle_delete_task(token):
 
     input("Press Enter to continue...")
 
-
 def handle_view_profile(token):
     print("\n--- My Profile ---")
     headers = {"Authorization": f"Bearer {token}"}
@@ -140,10 +139,6 @@ def handle_view_profile(token):
         print(f"  Username: {user['username']}")
         print(f"  Email: {user['email']}")
         print(f"  Member since: {user['created_at']}")
-    else:
-        print("Error fetching profile")
-
-    input("\nPress Enter to continue...")  print(f"  Member since: {user['created_at']}")
     else:
         print("Error fetching profile")
 
