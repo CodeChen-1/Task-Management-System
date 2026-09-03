@@ -1,4 +1,5 @@
 import requests
+from requests.exceptions import ConnectionError
 
 BASE_URL = "http://127.0.0.1:8000"
 
@@ -8,16 +9,24 @@ def handle_register():
     email = input("Email: ").strip()
     password = input("Password: ").strip()
 
-    response = requests.post(f"{BASE_URL}/register", json={
-        "username": username,
-        "email": email,
-        "password": password
-    })
+    try:
+        response = requests.post(f"{BASE_URL}/register", json={
+            "username": username,
+            "email": email,
+            "password": password
+        })
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         print("Registration successful! You can now login.")
     else:
-        print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        try:
+            print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        except Exception:
+            print(f"Error: Server returned status {response.status_code}")
 
     input("Press Enter to continue...")
 
@@ -27,10 +36,15 @@ def handle_login():
     username = input("Username: ").strip()
     password = input("Password: ").strip()
 
-    response = requests.post(f"{BASE_URL}/login", json={
-        "username": username,
-        "password": password
-    })
+    try:
+        response = requests.post(f"{BASE_URL}/login", json={
+            "username": username,
+            "password": password
+        })
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         token = response.json().get("access_token")
@@ -38,14 +52,23 @@ def handle_login():
         from cli.menus import task_menu
         task_menu(token)
     else:
-        print(f"Error: {response.json().get('detail', 'Invalid credentials')}")
+        try:
+            print(f"Error: {response.json().get('detail', 'Invalid credentials')}")
+        except Exception:
+            print(f"Error: Server returned status {response.status_code}")
 
     input("Press Enter to continue...")
 
 def handle_list_tasks(token):
     print("\n--- My Tasks ---")
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/tasks", headers=headers)
+
+    try:
+        response = requests.get(f"{BASE_URL}/tasks", headers=headers)
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         tasks = response.json()
@@ -67,16 +90,25 @@ def handle_create_task(token):
     priority = input("Priority (low/medium/high) [medium]: ").strip() or "medium"
 
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.post(f"{BASE_URL}/tasks", headers=headers, json={
-        "title": title,
-        "description": description if description else None,
-        "priority": priority
-    })
+
+    try:
+        response = requests.post(f"{BASE_URL}/tasks", headers=headers, json={
+            "title": title,
+            "description": description if description else None,
+            "priority": priority
+        })
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         print("Task created!")
     else:
-        print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        try:
+            print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        except Exception:
+            print(f"Error: Server returned status {response.status_code}")
 
     input("Press Enter to continue...")
 
@@ -99,12 +131,20 @@ def handle_update_task(token):
         input("Press Enter to continue...")
         return
 
-    response = requests.put(f"{BASE_URL}/tasks/{task_id}", headers=headers, json=update_data)
+    try:
+        response = requests.put(f"{BASE_URL}/tasks/{task_id}", headers=headers, json=update_data)
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         print("Task updated!")
     else:
-        print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        try:
+            print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        except Exception:
+            print(f"Error: Server returned status {response.status_code}")
 
     input("Press Enter to continue...")
 
@@ -120,19 +160,34 @@ def handle_delete_task(token):
         return
 
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.delete(f"{BASE_URL}/tasks/{task_id}", headers=headers)
+
+    try:
+        response = requests.delete(f"{BASE_URL}/tasks/{task_id}", headers=headers)
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         print("Task deleted!")
     else:
-        print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        try:
+            print(f"Error: {response.json().get('detail', 'Unknown error')}")
+        except Exception:
+            print(f"Error: Server returned status {response.status_code}")
 
     input("Press Enter to continue...")
 
 def handle_view_profile(token):
     print("\n--- My Profile ---")
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/me", headers=headers)
+
+    try:
+        response = requests.get(f"{BASE_URL}/me", headers=headers)
+    except ConnectionError:
+        print("Error: Cannot connect to server. Is it running?")
+        input("Press Enter to continue...")
+        return
 
     if response.status_code == 200:
         user = response.json()
