@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from datetime import datetime
 
 from app.database import get_db
 from app.models.task import Task
@@ -31,11 +32,48 @@ def create_task(
 
 @router.get("/tasks", response_model=List[TaskResponse])
 def get_tasks(
+    search: Optional[str] = Query(None, description="Search in title and description"),
+    status: Optional[str] = Query(None, description="Filter by status: pending, in_progress, completed"),
+    priority: Optional[str] = Query(None, description="Filter by priority: low, medium, high"),
+    sort_by: Optional[str] = Query(None, description="Sort by: deadline, priority, created_at"),
+    deadline_status: Optional[str] = Query(None, description="Filter: overdue, upcoming, due_soon"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    tasks = db.query(Task).filter(Task.user_id == current_user.id).all()
-    return tasks
+    query = db.query(Task).filter(Task.user_id == current_user.id)
+    
+    if search:
+        query = query.filter(
+            (Task.title.contains(search)) | (Task.description.contains(search))
+        )
+
+    if status:
+        query = query.filter(Task.status == status)
+
+    if priority:
+        query = query.filter(Task.priority == priority)
+
+    if deadline_status:
+        now = datetime.utcnow()
+        if deadline_status == "overdue":
+            query = query.filter(Task.deadline < now, Task.status != "completed")
+        elif deadline_status == "upcoming":
+            query = query.filter(Task.deadline > now)
+        elif deadline_status == "due_soon":
+            from datetime import timedelta
+            soon = now + timedelta(hours=24)
+            query = query.filter(Task.deadline > now, Task.deadline < soon)
+ 
+    if sort_by == "deadline":
+        query = query.order_by(Task.deadline.asc())
+    elif sort_by == "priority":
+        query = query.order_by(Task.priority.asc())
+    elif sort_by == "created_at":
+        query = query.order_by(Task.created_at.desc())
+    else:
+        query = query.order_by(Task.created_at.desc())
+    
+    return query.all()
 
 @router.get("/tasks/{task_id}", response_model=TaskResponse)
 def get_task(
