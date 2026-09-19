@@ -61,10 +61,36 @@ def handle_login():
 
 def handle_list_tasks(token):
     print("\n--- My Tasks ---")
+    print("  1. All tasks")
+    print("  2. Search tasks")
+    print("  3. Filter by status")
+    print("  4. Filter by priority")
+    print("  5. Overdue tasks")
+    choice = input("Choose: ").strip()
+    
+    params = {}
+    if choice == "2":
+        keyword = input("Search keyword: ").strip()
+        params["search"] = keyword
+    elif choice == "3":
+        status = input("Status (pending/in_progress/completed): ").strip()
+        params["status"] = status
+    elif choice == "4":
+        priority = input("Priority (low/medium/high): ").strip()
+        params["priority"] = priority
+    elif choice == "5":
+        params["deadline_status"] = "overdue"
+    
+    # Build URL with query parameters
+    url = f"{BASE_URL}/tasks"
+    if params:
+        query_string = "&".join(f"{k}={v}" for k, v in params.items())
+        url = f"{url}?{query_string}"
+    
     headers = {"Authorization": f"Bearer {token}"}
 
     try:
-        response = requests.get(f"{BASE_URL}/tasks", headers=headers)
+        response = requests.get(url, headers=headers)
     except ConnectionError:
         print("Error: Cannot connect to server. Is it running?")
         input("Press Enter to continue...")
@@ -73,7 +99,7 @@ def handle_list_tasks(token):
     if response.status_code == 200:
         tasks = response.json()
         if not tasks:
-            print("No tasks yet!")
+            print("No tasks found!")
         else:
             for task in tasks:
                 print(f"  [{task['id']}] {task['title']} - {task['status']} ({task['priority']})")
