@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from app.config import settings
@@ -13,6 +14,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Task Management System", lifespan=lifespan)
 app.include_router(auth.router)
 app.include_router(tasks.router)
+
+app.mount("/", StaticFiles(directory="static", html=True, name="static"))
 
 @app.get("/")
 def root():
