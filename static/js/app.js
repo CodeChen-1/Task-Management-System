@@ -78,3 +78,57 @@ function showMainApp() {
     document.getElementById("main-app").style.display = "block";
     loadTasks();
 }
+
+async function loadTasks() {
+    const search = document.getElementById("search-input").value;
+    const status = document.getElementById("status-filter").value;
+    const priority = document.getElementById("priority-filter").value;
+    let url = `${BASE_URL}/tasks`;
+    const params = []; 
+    if (search) 
+        params.push(`search=${search}`);
+    if (status) 
+        params.push(`status=${status}`);  
+    if (priority) 
+        params.push(`priority=${priority}`);
+    if (params.length > 0)
+        url += "?" + params.join("&");
+
+    try {
+        const response = await fetch(url, {
+            headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const tasks = await response.json();
+            displayTasks(tasks);
+        } else if (response.status === 401) {
+            logout();
+        }
+    } catch (err) {
+        console.error("Error loading tasks:", err);
+    }
+}
+
+function displayTasks(tasks){
+    const container = document.getElementById("task-list");
+    if (tasks.length === 0) {
+        container.innerHTML = "<p>No tasks found</p>";
+        return;
+    }
+
+    container.innerHTML = tasks.map(task => `<div class="task-card ${task.status}">
+            <h3>${task.title}</h3>
+            <p>${task.description || "No description"}</p>
+            <div class="task-meta">
+                <span class="priority ${task.priority}">${task.priority}</span>
+                <span class="status">${task.status}</span>
+                ${task.deadline ? `<span class="deadline">Due: ${new Date(task.deadline).toLocaleDateString()}</span>` : ""}
+            </div>
+            <div class="task-actions">
+                ${task.status !== "completed" ? `<button onclick="updateTaskStatus(${task.id}, 'completed')">Complete</button>` : ""}
+                <button onclick="deleteTask(${task.id})">Delete</button>
+            </div>
+        </div>
+    `).join("");
+}
